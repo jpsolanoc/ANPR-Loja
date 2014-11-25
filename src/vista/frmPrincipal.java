@@ -50,7 +50,7 @@ public class frmPrincipal extends javax.swing.JFrame {
                                 for (Rect rect : faceDetections.toArray()) {
                                     //Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0));
                                     Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), 2);
-
+                                    setPlacaImage(convertir(Sub_Image(imagen,rect)));
                                 }
                                 setImage(convertir(imagen));
                             }
@@ -65,13 +65,7 @@ public class frmPrincipal extends javax.swing.JFrame {
     }
 
 public Mat  Sub_Image(Mat image, Rect roi){
-    Mat result;
-
-    SetImageROI(image,roi);
-    // sub-image
-    result = cvCreateImage( cvSize(roi.width(), roi.height()), image.depth(), image.nChannels() );
-    ore.clone(image,result);
-    cvResetImageROI(image); // release image ROI
+    Mat result= image.submat(roi);
     return result;
 }
        public void setImage(Image imagen){
@@ -79,6 +73,15 @@ public Mat  Sub_Image(Mat image, Rect roi){
  
         ImageIcon icon = new ImageIcon(imagen.getScaledInstance(jl_display.getWidth(), jl_display.getHeight(), Image.SCALE_SMOOTH));
         jl_display.setIcon(icon);
+ 
+      //  panel.add(etiqueta);
+        // panel.updateUI();
+    }
+           public void setPlacaImage(Image imagen){
+      //  panel.removeAll();
+ 
+        ImageIcon icon = new ImageIcon(imagen.getScaledInstance(jl_placa.getWidth(), jl_placa.getHeight(), Image.SCALE_SMOOTH));
+        jl_placa.setIcon(icon);
  
       //  panel.add(etiqueta);
         // panel.updateUI();
