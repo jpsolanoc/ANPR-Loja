@@ -5,6 +5,7 @@
  */
 package vista;
 
+import deteccion.opencv.Extra;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -46,12 +47,14 @@ public class frmPrincipal extends javax.swing.JFrame {
                             //Thread.sleep(100);
                             cap.read(imagen);
                             if (!imagen.empty()) {
+                                Core.putText(imagen,Extra.retornaFecha(), new Point(10,25),1, 2, new Scalar(0, 255, 0), 3);
+                                Core.putText(imagen,Extra.retornaHora(), new Point(10,55),1, 2, new Scalar(0, 255, 0), 3);
                                 faceDetector.detectMultiScale(imagen, faceDetections);
                                 for (Rect rect : faceDetections.toArray()) {
                                     //Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0));
                                     Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), 2);
-                                   Core.line(imagen, new Point(rect.x, rect.y), new Point(500, 500), new Scalar(0, 255, 0) );
-                                    setPlacaImage(convertir(Sub_Image(imagen,rect)));
+                                    Core.line(imagen, new Point(rect.x + rect.width / 2, rect.y + rect.height), new Point(imagen.width() / 2, imagen.height()), new Scalar(0, 255, 0), 3);
+                                    setPlacaImage(convertir(Sub_Image(imagen, rect)));
                                 }
                                 setImage(convertir(imagen));
                             }
@@ -65,28 +68,31 @@ public class frmPrincipal extends javax.swing.JFrame {
         hilo.start();
     }
 
-public Mat  Sub_Image(Mat image, Rect roi){
-    Mat result= image.submat(roi);
-    return result;
-}
-       public void setImage(Image imagen){
+    public Mat Sub_Image(Mat image, Rect roi) {
+        Mat result = image.submat(roi);
+        return result;
+    }
+
+    public void setImage(Image imagen) {
       //  panel.removeAll();
- 
+
         ImageIcon icon = new ImageIcon(imagen.getScaledInstance(jl_display.getWidth(), jl_display.getHeight(), Image.SCALE_SMOOTH));
         jl_display.setIcon(icon);
- 
-      //  panel.add(etiqueta);
+
+        //  panel.add(etiqueta);
         // panel.updateUI();
     }
-           public void setPlacaImage(Image imagen){
+
+    public void setPlacaImage(Image imagen) {
       //  panel.removeAll();
- 
+
         ImageIcon icon = new ImageIcon(imagen.getScaledInstance(jl_placa.getWidth(), jl_placa.getHeight(), Image.SCALE_SMOOTH));
         jl_placa.setIcon(icon);
- 
-      //  panel.add(etiqueta);
+
+        //  panel.add(etiqueta);
         // panel.updateUI();
     }
+
     private Image convertir(Mat imagen) {
         MatOfByte matOfByte = new MatOfByte();
         Highgui.imencode(".jpg", imagen, matOfByte);
@@ -103,6 +109,7 @@ public Mat  Sub_Image(Mat image, Rect roi){
         }
         return (Image) bufImage;
     }
+
     /**
      * Creates new form frmPrincipal
      */
@@ -135,19 +142,21 @@ public Mat  Sub_Image(Mat image, Rect roi){
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jl_display, javax.swing.GroupLayout.PREFERRED_SIZE, 447, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 42, Short.MAX_VALUE)
-                .addComponent(jl_placa, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(38, 38, 38))
+                .addComponent(jl_display, javax.swing.GroupLayout.PREFERRED_SIZE, 510, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 40, Short.MAX_VALUE)
+                .addComponent(jl_placa, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jl_placa, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jl_display, javax.swing.GroupLayout.PREFERRED_SIZE, 390, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(71, Short.MAX_VALUE))
+                    .addComponent(jl_display, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jl_placa, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 359, Short.MAX_VALUE)))
+                .addContainerGap())
         );
 
         pack();
