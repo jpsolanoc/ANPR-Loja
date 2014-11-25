@@ -50,6 +50,7 @@ public class frmPrincipal extends javax.swing.JFrame {
                                 for (Rect rect : faceDetections.toArray()) {
                                     //Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0));
                                     Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), 2);
+                                   Core.line(imagen, new Point(rect.x, rect.y), new Point(500, 500), new Scalar(0, 255, 0) );
                                     setPlacaImage(convertir(Sub_Image(imagen,rect)));
                                 }
                                 setImage(convertir(imagen));
