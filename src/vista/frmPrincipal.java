@@ -30,9 +30,9 @@ import org.opencv.objdetect.CascadeClassifier;
  */
 public class frmPrincipal extends javax.swing.JFrame {
 
-    CascadeClassifier faceDetector = new CascadeClassifier("C:\\Users\\Diego\\Desktop\\cascade.xml");
+    CascadeClassifier faceDetector = new CascadeClassifier("cascade.xml");
     MatOfRect faceDetections = new MatOfRect();
-    VideoCapture cap = new VideoCapture(0);
+    VideoCapture cap = new VideoCapture(1);
     Mat imagen = new Mat();
     Thread hilo;
 
