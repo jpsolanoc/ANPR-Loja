@@ -82,6 +82,7 @@ public class frmPrincipal extends javax.swing.JFrame {
         BufferedImage biDestino = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()
                 .createCompatibleImage(bi.getWidth(), bi.getHeight(), Transparency.OPAQUE);
         for (int x = 0; x < bi.getWidth(); x++) {
+            int d=0;
             for (int y = 0; y < bi.getHeight(); y++) {
                 int r = 0;
                 int g = 0;
@@ -91,12 +92,17 @@ public class frmPrincipal extends javax.swing.JFrame {
                 g = c1.getGreen();
                 b = c1.getBlue();
                 int m=(r+g+b)/3;
+                d=d+m;
                 if(m>150)m=255;
              else
                  if(m<110)m=0;
 
                 
-                biDestino.setRGB(x, y, new Color(m, m, m).getRGB());
+               biDestino.setRGB(x, y, new Color(r, g, b).getRGB());
+                if((d/bi.getHeight())>125)
+                    for (int i = 0; i < bi.getHeight(); i++) {
+                         biDestino.setRGB(x, i, new Color(255, 0, 0).getRGB()); 
+                    }
             }
         }
         return biDestino;
