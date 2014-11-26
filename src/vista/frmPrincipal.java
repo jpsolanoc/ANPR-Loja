@@ -18,6 +18,8 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -37,10 +39,10 @@ public class frmPrincipal extends javax.swing.JFrame {
 
     CascadeClassifier faceDetector = new CascadeClassifier("cascade.xml");
     MatOfRect faceDetections = new MatOfRect();
-    VideoCapture cap = new VideoCapture(0);
+    VideoCapture cap = new VideoCapture(2);
     Mat imagen = new Mat();
     Thread hilo;
-
+     Tesseract instance;
     private void initCamara() {
         hilo = new Thread() {
 
@@ -60,6 +62,13 @@ public class frmPrincipal extends javax.swing.JFrame {
                                     Core.line(imagen, new Point(rect.x + rect.width / 2, rect.y + rect.height), new Point(imagen.width() / 2, imagen.height()), new Scalar(0, 255, 0), 3);
                                     setPlacaImage(convertir(Sub_Image(imagen, rect)));
                                     setPlacaFiltradaImage(filtrar(convertirBufferedImage(Sub_Image(imagen, rect))));
+                                    try {
+                                        String result = instance.doOCR(convertirBufferedImage(Sub_Image(imagen, rect)));
+
+                                        System.out.println(result);
+                                    } catch (TesseractException e) {
+                                        System.err.println(e.getMessage());
+                                    }
                                 }
                                 setImage(convertir(imagen));
                             }
@@ -82,7 +91,7 @@ public class frmPrincipal extends javax.swing.JFrame {
         BufferedImage biDestino = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()
                 .createCompatibleImage(bi.getWidth(), bi.getHeight(), Transparency.OPAQUE);
         for (int x = 0; x < bi.getWidth(); x++) {
-            int d=0;
+            int d = 0;
             for (int y = 0; y < bi.getHeight(); y++) {
                 int r = 0;
                 int g = 0;
@@ -91,18 +100,20 @@ public class frmPrincipal extends javax.swing.JFrame {
                 r = c1.getRed();
                 g = c1.getGreen();
                 b = c1.getBlue();
-                int m=(r+g+b)/3;
-                d=d+m;
-                if(m>150)m=255;
-             else
-                 if(m<110)m=0;
+                int m = (r + g + b) / 3;
+                d = d + m;
+                if (m > 150) {
+                    m = 255;
+                } else if (m < 110) {
+                    m = 0;
+                }
 
-                
-               biDestino.setRGB(x, y, new Color(r, g, b).getRGB());
-                if((d/bi.getHeight())>125)
+                biDestino.setRGB(x, y, new Color(r, g, b).getRGB());
+                if ((d / bi.getHeight()) > 125) {
                     for (int i = 0; i < bi.getHeight(); i++) {
-                         biDestino.setRGB(x, i, new Color(255, 0, 0).getRGB()); 
+                        biDestino.setRGB(x, i, new Color(255, 0, 0).getRGB());
                     }
+                }
             }
         }
         return biDestino;
@@ -176,6 +187,7 @@ public class frmPrincipal extends javax.swing.JFrame {
      */
     public frmPrincipal() {
         initComponents();
+        instance = Tesseract.getInstance();  // JNA Interface Mapping
         this.initCamara();
     }
 
