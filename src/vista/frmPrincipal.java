@@ -42,10 +42,10 @@ public class frmPrincipal extends javax.swing.JFrame {
     ArrayList<String> lista_validas_parte_letra = new ArrayList<String>();
     ArrayList<String> lista_validas_parte_numero = new ArrayList<String>();
     CascadeClassifier faceDetector = new CascadeClassifier("cascade.xml");
-    DefaultListModel listModel;
-    DefaultListModel listModel_nombres;
+    DefaultListModel listModel=new DefaultListModel();;
+    DefaultListModel listModel_nombres=new DefaultListModel();
     MatOfRect faceDetections = new MatOfRect();
-    VideoCapture cap = new VideoCapture(2);
+    VideoCapture cap = new VideoCapture(0);
     Mat imagen = new Mat();
     Thread hilo;
      Tesseract instance;
@@ -67,15 +67,15 @@ public class frmPrincipal extends javax.swing.JFrame {
                                     Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), 2);
                                     Core.line(imagen, new Point(rect.x + rect.width / 2, rect.y + rect.height), new Point(imagen.width() / 2, imagen.height()), new Scalar(0, 255, 0), 3);
                                     setPlacaImage(convertir(Sub_Image(imagen, rect)));
-                                    setPlacaFiltradaImage(filtrar(convertirBufferedImage(Sub_Image(imagen, rect))));
+                                  //  setPlacaFiltradaImage(filtrar(convertirBufferedImage(Sub_Image(imagen, rect))));
                                     try {
                                         String result = instance.doOCR(convertirBufferedImage(Sub_Image(imagen, rect)));
-                                        
-                                        //System.out.println(result+"hola");
-                                        result=result.substring(0, 8);
-                                      //  result=Extra.posible_placa(result);
-                                        lista_placas.add(result);
+                                       //result="XBU-445   ";
                                         System.out.println(result);
+                                       result=Extra.posible_placa(result);
+                                    //    result=Extra.posible_placa(result);
+                                        lista_placas.add(result);
+                                       // System.out.println(result);
                                     } catch (TesseractException e) {
                                      //   System.err.println(e.getMessage());
                                     }
@@ -209,9 +209,10 @@ public class frmPrincipal extends javax.swing.JFrame {
         for (int i = 0; i < lista_placas.size(); i++) {
             if (lista_placas.get(i) != null) {
                 if ((lista_placas.get(i).length() == 7) || (lista_placas.get(i).length() == 8)) {
+                    System.out.println("TAMAÑO CORRECTO");
                     parte_letra = lista_placas.get(i).substring(0, 3);
-                    parte_numero = lista_placas.get(i).substring(3, lista_placas.get(i).length());
-                    if ((Extra.conversionLetra(parte_letra) != null) && (Extra.conversionNumero(parte_numero) != null)) {
+                    parte_numero = lista_placas.get(i).substring(4, lista_placas.get(i).length());
+                   if ((Extra.conversionLetra(parte_letra) != null) && (Extra.conversionNumero(parte_numero) != null)) {
                         lista_validas_parte_letra.add(parte_letra);
                         lista_validas_parte_numero.add(parte_numero);
                         System.out.println("placa: " + parte_letra + "-" + parte_numero);
@@ -221,11 +222,13 @@ public class frmPrincipal extends javax.swing.JFrame {
         }
         parte_letra = Extra.moda(lista_validas_parte_letra);
         parte_numero = Extra.moda(lista_validas_parte_numero);
+        //  System.out.println(parte_letra);
+                    System.out.println(parte_numero);
         if (!parte_letra.equals("") && !parte_numero.equals("")) {
             placa = parte_letra + "-" + parte_numero;
             listModel_nombres.addElement(placa);
-            jlista_placas.setModel(listModel);
-          
+        //    jlista_placas.setModel(listModel);
+          jlista_placas.setModel(listModel_nombres);
         }
 
     }
@@ -244,75 +247,102 @@ public class frmPrincipal extends javax.swing.JFrame {
         jScrollPane3 = new javax.swing.JScrollPane();
         jlista_placas = new javax.swing.JList();
         jButton1 = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-
-        jl_display.setText("jLabel1");
-
-        jl_placa.setText("jLabel1");
-
-        jl_placa_filtrada.setText("jLabel1");
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+        });
 
         jlista_placas.setFont(new java.awt.Font("DejaVu Sans", 1, 18)); // NOI18N
         jScrollPane3.setViewportView(jlista_placas);
 
-        jButton1.setText("jButton1");
+        jButton1.setText("Detectar placa");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
+        jLabel1.setText("Placa detectada:");
+
+        jLabel2.setText("Placa procesada:");
+
+        jLabel3.setText("Video:");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jl_display, javax.swing.GroupLayout.PREFERRED_SIZE, 519, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 45, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jl_placa, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jl_placa_filtrada, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(69, 69, 69))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(21, 21, 21))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton1)
-                        .addContainerGap())))
+                        .addContainerGap()
+                        .addComponent(jl_display, javax.swing.GroupLayout.PREFERRED_SIZE, 519, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(21, 21, 21)
+                        .addComponent(jLabel3)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 35, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jl_placa, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jl_placa_filtrada, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING)))
+                .addGap(69, 69, 69))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(15, 15, 15)
+                        .addComponent(jLabel1))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jLabel3)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jl_placa, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(42, 42, 42)
+                        .addGap(20, 20, 20)
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jl_placa_filtrada, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(45, 45, 45)
+                        .addGap(18, 18, 18)
                         .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(18, 18, 18)
                         .addComponent(jButton1)
-                        .addContainerGap(44, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap(52, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(jl_display, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(62, 62, 62))))
+                        .addGap(29, 29, 29))))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-       validar_placa();
+        System.out.println("VALIDANDO PLACA");
+        validar_placa();
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+    System.exit(0);
+    }//GEN-LAST:event_formWindowClosed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JLabel jl_display;
     private javax.swing.JLabel jl_placa;

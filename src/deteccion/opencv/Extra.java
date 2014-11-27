@@ -22,7 +22,7 @@ public class Extra {
     public static int camara_divece = 1;
     
      public static String posible_placa(String texto) {
-       texto.replace(" ", "");
+        texto=texto.replace(" ", "");
          System.out.println(texto);
         return texto;
     }
