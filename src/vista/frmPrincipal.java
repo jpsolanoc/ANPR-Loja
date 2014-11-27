@@ -45,7 +45,8 @@ public class frmPrincipal extends javax.swing.JFrame {
     DefaultListModel listModel=new DefaultListModel();;
     DefaultListModel listModel_nombres=new DefaultListModel();
     MatOfRect faceDetections = new MatOfRect();
-    VideoCapture cap = new VideoCapture(0);
+    VideoCapture cap = new VideoCapture("rtsp://admin:12345@192.168.10.150:554//Streaming/Channels/1");
+    
     Mat imagen = new Mat();
     Thread hilo;
      Tesseract instance;
