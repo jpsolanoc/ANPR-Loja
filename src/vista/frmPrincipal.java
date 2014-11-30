@@ -6,6 +6,8 @@
 package vista;
 
 import deteccion.opencv.Extra;
+import deteccion.opencv.Luminance;
+import deteccion.opencv.Picture;
 import java.awt.Color;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
@@ -13,6 +15,7 @@ import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,14 +26,17 @@ import javax.swing.ImageIcon;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.highgui.Highgui;
 import org.opencv.highgui.VideoCapture;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 
 /**
@@ -38,18 +44,22 @@ import org.opencv.objdetect.CascadeClassifier;
  * @author fabricio
  */
 public class frmPrincipal extends javax.swing.JFrame {
+
     ArrayList<String> lista_placas = new ArrayList<String>();
     ArrayList<String> lista_validas_parte_letra = new ArrayList<String>();
     ArrayList<String> lista_validas_parte_numero = new ArrayList<String>();
     CascadeClassifier faceDetector = new CascadeClassifier("cascade.xml");
-    DefaultListModel listModel=new DefaultListModel();;
-    DefaultListModel listModel_nombres=new DefaultListModel();
+    DefaultListModel listModel = new DefaultListModel();
+    ;
+    DefaultListModel listModel_nombres = new DefaultListModel();
     MatOfRect faceDetections = new MatOfRect();
-    VideoCapture cap = new VideoCapture("rtsp://admin:12345@192.168.10.150:554//Streaming/Channels/1");
-    
+    // VideoCapture cap = new VideoCapture("rtsp://admin:12345@192.168.10.150:554//Streaming/Channels/1");
+    VideoCapture cap = new VideoCapture(0);
+
     Mat imagen = new Mat();
     Thread hilo;
-     Tesseract instance;
+    Tesseract instance;
+
     private void initCamara() {
         hilo = new Thread() {
 
@@ -67,18 +77,27 @@ public class frmPrincipal extends javax.swing.JFrame {
                                     //Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0));
                                     Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), 2);
                                     Core.line(imagen, new Point(rect.x + rect.width / 2, rect.y + rect.height), new Point(imagen.width() / 2, imagen.height()), new Scalar(0, 255, 0), 3);
+
+                               //    Imgproc.adaptiveThreshold(imagen, imagen, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY_INV, 15, 4);
+                                    //      Imgproc.Canny(imagen,imagen, 15, 34);
+                                    //     Imgproc.threshold(imagen, imagen, -1, 255, 1);
+                                    System.out.println("valor?" );
+                                 //   Imgproc.threshold(imagen, imagen, -1, 255, Imgproc.THRESH_OTSU);
+
                                     setPlacaImage(convertir(Sub_Image(imagen, rect)));
-                                  //  setPlacaFiltradaImage(filtrar(convertirBufferedImage(Sub_Image(imagen, rect))));
+
+                                    setPlacaFiltradaImage(threshold(convertirBufferedImage(Sub_Image(imagen, rect))));
                                     try {
-                                        String result = instance.doOCR(convertirBufferedImage(Sub_Image(imagen, rect)));
-                                       //result="XBU-445   ";
+                                        String result = "ABC-0123";
+                                       //  result = instance.doOCR(convertirBufferedImage(Sub_Image(imagen, rect)));
+                                        //result="XBU-445   ";
                                         System.out.println(result);
-                                       result=Extra.posible_placa(result);
-                                    //    result=Extra.posible_placa(result);
+                                        result = Extra.posible_placa(result);
+                                        //    result=Extra.posible_placa(result);
                                         lista_placas.add(result);
-                                       // System.out.println(result);
-                                    } catch (TesseractException e) {
-                                     //   System.err.println(e.getMessage());
+                                        // System.out.println(result);
+                                    } catch (Exception e) {
+                                        //   System.err.println(e.getMessage());
                                     }
                                 }
                                 setImage(convertir(imagen));
@@ -92,7 +111,22 @@ public class frmPrincipal extends javax.swing.JFrame {
         };
         hilo.start();
     }
-
+    public BufferedImage threshold(BufferedImage image){
+       
+         int THRESHOLD = 130;
+        Picture pic = new Picture(image);
+      
+        for (int i = 0; i < pic.width(); i++) {
+            for (int j = 0; j < pic.height(); j++) {
+                Color color = pic.get(i, j);
+                double lum = Luminance.lum(color);
+                if (lum >= THRESHOLD) pic.set(i, j, Color.WHITE);
+                else                  pic.set(i, j, Color.BLACK);
+            }
+        }
+        pic.show();
+        return pic.getImage();
+    }
     public Mat Sub_Image(Mat image, Rect roi) {
         Mat result = image.submat(roi);
         return result;
@@ -201,7 +235,8 @@ public class frmPrincipal extends javax.swing.JFrame {
         instance = Tesseract.getInstance();  // JNA Interface Mapping
         this.initCamara();
     }
- public void validar_placa() {
+
+    public void validar_placa() {
         String parte_numero = "";
         String parte_letra = "";
         String placa = "";
@@ -213,7 +248,7 @@ public class frmPrincipal extends javax.swing.JFrame {
                     System.out.println("TAMAÑO CORRECTO");
                     parte_letra = lista_placas.get(i).substring(0, 3);
                     parte_numero = lista_placas.get(i).substring(4, lista_placas.get(i).length());
-                   if ((Extra.conversionLetra(parte_letra) != null) && (Extra.conversionNumero(parte_numero) != null)) {
+                    if ((Extra.conversionLetra(parte_letra) != null) && (Extra.conversionNumero(parte_numero) != null)) {
                         lista_validas_parte_letra.add(parte_letra);
                         lista_validas_parte_numero.add(parte_numero);
                         System.out.println("placa: " + parte_letra + "-" + parte_numero);
@@ -224,15 +259,16 @@ public class frmPrincipal extends javax.swing.JFrame {
         parte_letra = Extra.moda(lista_validas_parte_letra);
         parte_numero = Extra.moda(lista_validas_parte_numero);
         //  System.out.println(parte_letra);
-                    System.out.println(parte_numero);
+        System.out.println(parte_numero);
         if (!parte_letra.equals("") && !parte_numero.equals("")) {
             placa = parte_letra + "-" + parte_numero;
             listModel_nombres.addElement(placa);
-        //    jlista_placas.setModel(listModel);
-          jlista_placas.setModel(listModel_nombres);
+            //    jlista_placas.setModel(listModel);
+            jlista_placas.setModel(listModel_nombres);
         }
 
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -335,7 +371,7 @@ public class frmPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
-    System.exit(0);
+        System.exit(0);
     }//GEN-LAST:event_formWindowClosed
 
 
