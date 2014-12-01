@@ -22,6 +22,7 @@ import javax.swing.ImageIcon;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
@@ -29,6 +30,7 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.highgui.VideoCapture;
 import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.video.KalmanFilter;
 
 /**
  *
@@ -36,38 +38,84 @@ import org.opencv.objdetect.CascadeClassifier;
  */
 public class frmPrincipalConteoCars extends javax.swing.JFrame {
 
-    CascadeClassifier faceDetector = new CascadeClassifier("cascade.xml");
+    CascadeClassifier faceDetector = new CascadeClassifier("cars3.xml");
     MatOfRect faceDetections = new MatOfRect();
-    VideoCapture cap = new VideoCapture(0);
+    public VideoCapture camara = new VideoCapture(0);
+    public VideoCapture video = new VideoCapture("video2.avi");
     public Mat imagen = new Mat();
     Thread hilo;
+    Thread hilo_initCamara;
     public Thread haz;
     public ArrayList<Point> haz_puntos = new ArrayList<Point>();
     int contador_sube = 0;
     int contador_baja = 0;
 
-    public void hiloHaz() {
-        haz = new Thread() {
+    private void initVideo() {
+        hilo_initCamara = new Thread() {
             public void run() {
+                Point p1 = new Point(12, 110);
+                Point p2 = new Point(220, 110);
 
-                while (true) {
-                    System.out.println("holaa");
-                    System.out.println(haz_puntos.size());
-                    if (!haz_puntos.isEmpty()) {
-                        for (int i = 0; haz_puntos.size() < 10; i++) {
-                  //  for (int j = 0; j < 100; j++) {
+                Point pfs1 = new Point(30, 150);
+                Point pfs2 = new Point(30, 300);
 
-                            Core.circle(imagen, haz_puntos.get(i), 5, new Scalar(0, 0, 255), 6);
-                          //  Thread.sleep(10);
+                Point pfb1 = new Point(620, 150);
+                Point pfb2 = new Point(620, 300);
 
-                   // }
+                Point pc = new Point();
+
+                boolean baja = false;
+                video.open("video1.avi");
+                video.read(imagen);
+                while (!imagen.empty()) {
+                     try {
+                        video.read(imagen);
+                        Core.putText(imagen, Extra.retornaFecha(), new Point(10, 10), 1, 1, new Scalar(0, 255, 0), 2);
+                        Core.putText(imagen, Extra.retornaHora(), new Point(10, 30), 1, 1, new Scalar(0, 255, 0), 2);
+                        Core.putText(imagen, "# Suben: " + contador_sube, new Point(150, 10), 1, 1, new Scalar(0, 255, 0), 2);
+                        Core.putText(imagen, "# Bajan: " + contador_baja, new Point(150, 30), 1, 1, new Scalar(0, 255, 0), 2);
+                        faceDetector.detectMultiScale(imagen, faceDetections);
+                        Core.line(imagen, p1, p2, new Scalar(0, 255, 0), 3);
+                        int n_face = 0;
+                        Point anterior = new Point(0, 0);
+                        for (Rect rect : faceDetections.toArray()) {
+                            n_face++;
+                            //Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0));
+                            pc.x = rect.x + rect.width / 2;
+                            pc.y = rect.y + rect.height / 2;
+                            haz_puntos.add(pc);
+                            Core.putText(imagen, "#: " + n_face, new Point(rect.x - 2, rect.y - 2), 1, 1, new Scalar(0, 255, 0), 2);
+                            Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), 1);
+                            Core.circle(imagen, pc, 2, new Scalar(0, 0, 255), 3);
+                            //   Core.line(imagen, new Point(rect.x + rect.width / 2, rect.y + rect.height), new Point(imagen.width() / 2, imagen.height()), new Scalar(0, 255, 0), 3);
+
+                            if (pc.y < p1.y) {
+                                baja = true;
+                            }
+
+                            if (pc.y > p1.y) {
+                                baja = false;
+                            }
+
+                            if ((baja == true) && (pc.y == p1.y)) {
+                                contador_baja++;
+                            }
+
+                            if ((pc.y == p1.y) && (baja == false)) {
+                                contador_sube++;
+                            }
+                            anterior = pc;
+
                         }
+                        setImage(convertir(imagen));
+                        Thread.sleep(50);
+                    } catch (InterruptedException ex) {
+                        //     Logger.getLogger(frmPrincipalConteoCars.class.getName()).log(Level.SEVERE, null, ex);
                     }
-
                 }
             }
         };
-        haz.start();
+        hilo_initCamara.start();
     }
 
     private void initCamara() {
@@ -87,11 +135,11 @@ public class frmPrincipalConteoCars extends javax.swing.JFrame {
                 Point pc = new Point();
 
                 boolean baja = false;
-                if (cap.isOpened()) {
+                if (camara.isOpened()) {
                     while (true) {
                         try {
                             //Thread.sleep(100);
-                            cap.read(imagen);
+                            camara.read(imagen);
                             if (!imagen.empty()) {
 
                                 Core.putText(imagen, Extra.retornaFecha(), new Point(10, 25), 1, 2, new Scalar(0, 255, 0), 3);
@@ -101,7 +149,7 @@ public class frmPrincipalConteoCars extends javax.swing.JFrame {
                                 faceDetector.detectMultiScale(imagen, faceDetections);
                                 Core.line(imagen, p1, p2, new Scalar(0, 255, 0), 3);
                                 int n_face = 0;
-                                Point anterior = new Point(0,0);
+                                Point anterior = new Point(0, 0);
                                 for (Rect rect : faceDetections.toArray()) {
                                     n_face++;
                                     //Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0));
@@ -111,22 +159,20 @@ public class frmPrincipalConteoCars extends javax.swing.JFrame {
                                     Core.putText(imagen, "#: " + n_face, new Point(rect.x - 20, rect.y - 20), 1, 2, new Scalar(0, 255, 0), 3);
                                     Core.rectangle(imagen, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), 2);
                                     Core.circle(imagen, pc, 5, new Scalar(0, 0, 255), 6);
-                                    Core.line(imagen, new Point(rect.x + rect.width / 2, rect.y + rect.height), new Point(imagen.width() / 2, imagen.height()), new Scalar(0, 255, 0), 3);
-                                  
-                                    
+
+                                //    Core.line(imagen, new Point(rect.x + rect.width / 2, rect.y + rect.height), new Point(imagen.width() / 2, imagen.height()), new Scalar(0, 255, 0), 3);
                                     if (pc.y < p1.y) {
                                         baja = true;
-                                       
+
                                     }
-                                    
+
                                     if (pc.y > p1.y) {
                                         baja = false;
                                     }
-                                    
-                                    
+
                                     if ((baja == true) && (pc.y == p1.y)) {
-                                        
-                                        Core.line(imagen, anterior, pc, new Scalar(0, 0, 255), 3);   
+
+                                        Core.line(imagen, anterior, pc, new Scalar(0, 0, 255), 3);
                                         Core.line(imagen, p1, p2, new Scalar(0, 0, 255), 3);
                                         Core.line(imagen, pfs1, pfs2, new Scalar(255, 0, 0), 3);
                                         Core.line(imagen, pfb1, pfb2, new Scalar(255, 0, 0), 3);
@@ -136,7 +182,7 @@ public class frmPrincipalConteoCars extends javax.swing.JFrame {
                                         Core.line(imagen, pfb2, new Point(pfb2.x - 10, pfb2.y - 10), new Scalar(255, 0, 0), 3);
                                         contador_baja++;
                                     }
-                                    
+
                                     if ((pc.y == p1.y) && (baja == false)) {
                                         Core.line(imagen, p1, p2, new Scalar(0, 0, 255), 5);
                                         Core.line(imagen, pfs1, pfs2, new Scalar(0, 0, 255), 5);
@@ -147,7 +193,7 @@ public class frmPrincipalConteoCars extends javax.swing.JFrame {
                                         Core.line(imagen, pfs1, new Point(pfs1.x - 10, pfs1.y + 10), new Scalar(0, 0, 255), 3);
                                         contador_sube++;
                                     }
-                                    anterior=pc;
+                                    anterior = pc;
 
                                 }
                                 setImage(convertir(imagen));
@@ -162,8 +208,6 @@ public class frmPrincipalConteoCars extends javax.swing.JFrame {
         hilo.start();
     }
 
-    
-    
     public Mat Sub_Image(Mat image, Rect roi) {
         Mat result = image.submat(roi);
         return result;
@@ -230,7 +274,8 @@ public class frmPrincipalConteoCars extends javax.swing.JFrame {
      */
     public frmPrincipalConteoCars() {
         initComponents();
-        this.initCamara();
+        this.initVideo();
+        //  this.initCamara();
     }
 
     /**
