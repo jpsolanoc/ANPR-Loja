@@ -12,6 +12,7 @@ package deteccion.opencv;
 
 import org.opencv.core.Core;
 import vista.frmPrincipal;
+import vista.frmPrincipalConteoCars;
 
 public class Run {
 
@@ -20,7 +21,8 @@ public class Run {
      */
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        new frmPrincipal().setVisible(true);
+        //new frmPrincipal().setVisible(true);
+        new frmPrincipalConteoCars().setVisible(true);
     }
 
 }
